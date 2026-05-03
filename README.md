@@ -3,7 +3,7 @@
 > A roleplay Point-of-Sale register for World of Warcraft merchants.  
 > Manage products, orders, staff, and treasury — all from a single in-game window.
 
----
+--- 
 
 ## Overview
 
