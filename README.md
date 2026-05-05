@@ -103,6 +103,19 @@ Storekeeper works standalone but integrates with the following addons when prese
 ## Changelog
 
 ### v1.3.2
+**Bug Fixes**
+- Network: Empty log syncs now correctly use the LOGS_START / LOGS_END protocol instead of the unhandled LOGS_DATA command, which was silently dropped by receivers.
+- Network: Category colours and category order were not being pushed to staff members whose products were already up to date when they came online. They now always receive colours on login sync.
+
+**Added**
+- What's New auto-open: The register now opens automatically to the What's New tab the first time you log in after installing a new version, so you never miss what changed.
+- Community links: The What's New tab now has three quick-access buttons — Discord, CurseForge, and GitHub. Click any of them to copy the URL to your clipboard.
+
+**Changed**
+- Network: A full sync request (/sk sync) now also pushes category colours and category order alongside products and orders.
+- Code cleanup: Removed an internal BroadcastToStaff function that was defined but never called. Removed the dead LOGS_DATA send path that had no corresponding receiver.
+
+### v1.3.1
 **Bugs Fixed**
 - Management tab: Move Up and Move Down buttons were too narrow, causing text to overflow outside the button borders.
 - Products tab: Category and Price column headers were misaligned with the data rows beneath them.
@@ -119,7 +132,7 @@ Storekeeper works standalone but integrates with the following addons when prese
 - Sync button removed from the title bar — sync runs automatically on login.
 - Removed dead TRP3 icon browser integration code that was no longer reachable.
 
-### v1.3.1
+### v1.3.0
 - Granular staff permissions (edit products, apply discounts, adjust stock, add employees).
 - Staff discounts per staff member.
 - Category colours synced to all staff.
