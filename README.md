@@ -86,7 +86,6 @@ The main point-of-sale screen. Products are organised into collapsible categorie
 Storekeeper works standalone but integrates with the following addons when present:
 
 - **Total RP 3** — character names are pulled from your TRP3 profile for receipts and the seller label in the register.
-- **Storekeeper: Extended** — a companion addon that adds additional features. Currently in closed beta.
 
 ---
 
@@ -101,6 +100,18 @@ Storekeeper works standalone but integrates with the following addons when prese
 ---
 
 ## Changelog
+
+Storekeeper - Changelog
+
+### v1.3.3
+**Added**
+- TRP3 Profile Text: a new button on the Products tab generates ready-to-paste TRP3 markup for your character's About tab, no separate addon required. A settings panel lets you customise shop title size, category title size, product name size, alignment, category colours, and whether out-of-stock products are included.
+
+**Changed**
+- Network: A full sync request (/sk sync) now also pushes category colours and category order alongside products and orders.
+- Code cleanup: Removed an internal BroadcastToStaff function that was defined but never called. Removed the dead LOGS_DATA send path that had no corresponding receiver.
+
+The previous version mentioned another addon in the makings. A separate one that shows a catalogue. But due to no interest this project has been put on hold. Therefore the TRP3 feature is released.
 
 ### v1.3.2
 **Bug Fixes**
