@@ -103,6 +103,24 @@ Storekeeper works standalone but integrates with the following addons when prese
 
 Storekeeper - Changelog
 
+### v1.3.4
+**Added**
+- Cart stepper: each item in the cart now has a − button to decrease quantity by one, a quantity counter, a + button to add one more, and a separate × button to remove the line entirely.
+- Active shop is now remembered per character. Each alt restores their own last-selected shop on login rather than sharing one account-wide value.
+- Seller IC name is now saved per character. On first login it auto-populates from your TRP3 profile if one is set. A From TRP3 button in Settings lets you refresh it at any time.
+- A mini-tutorial fires once on first login after updating, pointing out the new TRP3 Profile Text button on the Products tab.
+
+**Bugs Fixed**
+- Tooltip version badge not showing on other players — the HELLO whisper reply now uses the full Name-Realm address. Previously the realm suffix was stripped, causing silent delivery failure on connected realms.
+- Tooltip version badge (TRP3) — the badge now resolves the hovered player from TRP3's own internal tooltip target instead of the mouseover unit token, which could point to a different player or return nil if the cursor had moved.
+- Account-wide shop access — characters on the same account no longer inherit the active shop of a different character at login.
+- Remove employee button unclickable — the button was calling an undefined function, causing a silent Lua error before the removal could run. Fixed.
+- Manager window spawning off-centre — the window was offset 300px to the right of screen centre on open.
+- Seller IC name bleeding across characters — new characters were being seeded with the IC name of whichever character last saved the setting.
+- Shop Overview and Staff tabs misaligned — content in these two tabs sat flush against the left edge of the window instead of matching the consistent padding used by all other tabs.
+- TOC: numeric CurseForge project ID — X-Curse-Project-ID was set to a text slug instead of the required numeric ID.
+- TOC: file path separators — module paths now use forward slashes as required.
+
 ### v1.3.3
 **Added**
 - TRP3 Profile Text: a new button on the Products tab generates ready-to-paste TRP3 markup for your character's About tab, no separate addon required. A settings panel lets you customise shop title size, category title size, product name size, alignment, category colours, and whether out-of-stock products are included.
