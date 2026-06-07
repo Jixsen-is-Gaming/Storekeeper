@@ -105,6 +105,22 @@ Storekeeper - Changelog
 
 ### v1.3.4
 **Added**
+- Payment details in Finish Transaction — the popup now includes a Gratuity (tip) field and a Customer Paid field when Paid in Full is selected. Change due is calculated live and automatically handled in the treasury.
+**Changed**
+- The "Receipt / Order" button has been renamed to "Finish Transaction".
+**Bug Fixes**
+- Switching characters now always loads the correct TRP3 IC name for the character you log in on. Previously the name from the last played character would persist until you pressed "From TRP3" manually.
+- The Storekeeper version badge in the TRP3 tooltip now shows for players outside of a group on first hover. A HELLO ping is sent the moment you hover someone, and the badge injects as soon as they reply without needing to re-hover. Fixed a casing mismatch (SK.NET vs SK.Net) that silently prevented the HELLO whisper from ever being sent to players not yet in the known peers list, meaning the badge would never appear for first-time encounters out of group.
+- The dropdown when creating or editing a product now caps at 8 visible rows and scrolls with the mousewheel for larger category lists. Fixed the scroll direction being inverted, the frame level ordering causing items to render incorrectly, and clipping not working as intended.
+- All addon messages are now queued and sent one at a time rather than in a single burst. This prevents WoW's rate limiter from triggering a disconnect when saving products in shops with multiple staff members or large product lists. Reduced the chunk size from 230 to 200 bytes to give proper headroom for message overhead, especially in shops with longer names.
+- The remove (X) button on roster rows now works correctly. It removes the staff member locally, sends a WITHDRAW message to cancel any pending invite popup on their end, and sends a KICK so their client removes the shop immediately. Inviting a player who does not have Storekeeper installed no longer silently adds them to the roster. They receive a plain whisper explaining they need the addon, and the inviter gets a chat message confirming this. The player is not added to the roster until they have the addon and are invited again. A new WITHDRAW network message is sent when a staff member is removed before they have accepted their invite, dismissing the invite popup on their screen.
+- When a kicked player logs in and the owner is online, the owner now sends a KICK automatically during the SYNC_PING handshake, cleaning up the shop on their end without any manual action required. When a player receives a SHOP_INFO roster update and they are not listed on it, they now automatically remove the shop from their local data with a clear chat message explaining why.
+- SYNC_END, ORDER_END, and LOGS_END now wait for all chunks to arrive before processing the data. Previously, if a single message was dropped by WoW, the sync would process incomplete data and could result in corrupted products, orders, or logs. Duplicate chunk messages are now ignored so that receiving the same chunk twice does not cause a premature sync.
+- Category colors were not being sent or received correctly in almost any scenario. BroadcastCategoryColors and SendCategoryColorsTo were reading from a field that was migrated away in v1.3.4 (shop.categories) and always sending an empty payload to staff. The SHOP_INFO and CAT_COLORS receive handlers were writing colors back into the same old field, meaning any colors received were immediately discarded on the next read. All four sites now correctly use shop.categoryColors.
+- Added a 10-second cooldown to the Request Sync button to prevent accidental spamming. Orders and category colors are now staggered behind the product sync so they do not arrive on the receiving end before the product list has finished transmitting. The owner now checks whether a SYNC_PING sender is still on the roster before pushing data. Players who have been removed receive a KICK instead.
+
+### v1.3.4
+**Added**
 - Cart stepper: each item in the cart now has a − button to decrease quantity by one, a quantity counter, a + button to add one more, and a separate × button to remove the line entirely.
 - Active shop is now remembered per character. Each alt restores their own last-selected shop on login rather than sharing one account-wide value.
 - Seller IC name is now saved per character. On first login it auto-populates from your TRP3 profile if one is set. A From TRP3 button in Settings lets you refresh it at any time.
