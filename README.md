@@ -103,90 +103,19 @@ Storekeeper works standalone but integrates with the following addons when prese
 
 Storekeeper - Changelog
 
-### v1.3.4
-**Added**
-- Payment details in Finish Transaction — the popup now includes a Gratuity (tip) field and a Customer Paid field when Paid in Full is selected. Change due is calculated live and automatically handled in the treasury.
-**Changed**
-- The "Receipt / Order" button has been renamed to "Finish Transaction".
-**Bug Fixes**
-- Switching characters now always loads the correct TRP3 IC name for the character you log in on. Previously the name from the last played character would persist until you pressed "From TRP3" manually.
-- The Storekeeper version badge in the TRP3 tooltip now shows for players outside of a group on first hover. A HELLO ping is sent the moment you hover someone, and the badge injects as soon as they reply without needing to re-hover. Fixed a casing mismatch (SK.NET vs SK.Net) that silently prevented the HELLO whisper from ever being sent to players not yet in the known peers list, meaning the badge would never appear for first-time encounters out of group.
-- The dropdown when creating or editing a product now caps at 8 visible rows and scrolls with the mousewheel for larger category lists. Fixed the scroll direction being inverted, the frame level ordering causing items to render incorrectly, and clipping not working as intended.
-- All addon messages are now queued and sent one at a time rather than in a single burst. This prevents WoW's rate limiter from triggering a disconnect when saving products in shops with multiple staff members or large product lists. Reduced the chunk size from 230 to 200 bytes to give proper headroom for message overhead, especially in shops with longer names.
-- The remove (X) button on roster rows now works correctly. It removes the staff member locally, sends a WITHDRAW message to cancel any pending invite popup on their end, and sends a KICK so their client removes the shop immediately. Inviting a player who does not have Storekeeper installed no longer silently adds them to the roster. They receive a plain whisper explaining they need the addon, and the inviter gets a chat message confirming this. The player is not added to the roster until they have the addon and are invited again. A new WITHDRAW network message is sent when a staff member is removed before they have accepted their invite, dismissing the invite popup on their screen.
-- When a kicked player logs in and the owner is online, the owner now sends a KICK automatically during the SYNC_PING handshake, cleaning up the shop on their end without any manual action required. When a player receives a SHOP_INFO roster update and they are not listed on it, they now automatically remove the shop from their local data with a clear chat message explaining why.
-- SYNC_END, ORDER_END, and LOGS_END now wait for all chunks to arrive before processing the data. Previously, if a single message was dropped by WoW, the sync would process incomplete data and could result in corrupted products, orders, or logs. Duplicate chunk messages are now ignored so that receiving the same chunk twice does not cause a premature sync.
-- Category colors were not being sent or received correctly in almost any scenario. BroadcastCategoryColors and SendCategoryColorsTo were reading from a field that was migrated away in v1.3.4 (shop.categories) and always sending an empty payload to staff. The SHOP_INFO and CAT_COLORS receive handlers were writing colors back into the same old field, meaning any colors received were immediately discarded on the next read. All four sites now correctly use shop.categoryColors.
-- Added a 10-second cooldown to the Request Sync button to prevent accidental spamming. Orders and category colors are now staggered behind the product sync so they do not arrive on the receiving end before the product list has finished transmitting. The owner now checks whether a SYNC_PING sender is still on the roster before pushing data. Players who have been removed receive a KICK instead.
+## v1.3.8.1
 
-### v1.3.4
-**Added**
-- Cart stepper: each item in the cart now has a − button to decrease quantity by one, a quantity counter, a + button to add one more, and a separate × button to remove the line entirely.
-- Active shop is now remembered per character. Each alt restores their own last-selected shop on login rather than sharing one account-wide value.
-- Seller IC name is now saved per character. On first login it auto-populates from your TRP3 profile if one is set. A From TRP3 button in Settings lets you refresh it at any time.
-- A mini-tutorial fires once on first login after updating, pointing out the new TRP3 Profile Text button on the Products tab.
+### Added
+- **Production-cost economics.** New per-product `restockCost` field and a per-shop `trackProductionCost` toggle (owner-gated, default false, set in the Stock & Treasury sub-tab).
+  - `DB:ApplyRestockCost(shopName, product, unitsAdded)` deducts `restockCost * units` from the treasury on stock increases only; clamps at 0 (matching `AddTreasury`), returns `cost, paid, short` so the UI can warn on shortfall. Logged to the activity log under the `treasury` category.
+  - Product form gains a Restock Cost g/s/c row; `SaveProduct` reads it into `fields.restockCost`, `LoadProduct` populates it, `ClearForm` resets it. Base form height 280 → 308 and the variants panel anchor shifted down to make room; product-list scrollframe bottom anchor adjusted to match.
+  - Sync: `restockCost` appended as field 12 in `SerialiseProduct`/`DeserialiseProduct` (variants stays field 11) — backwards-compatible in both directions; older peers ignore field 12, newer clients default it to nil. `AddProductFromTable` carries it. The toggle is appended as field 9 in `SHOP_INFO`; `SyncShop` refactored into reusable `NET:SendShopInfo` plus `NET:BroadcastShopInfo` for live owner→staff propagation on toggle. Receiver guards against older peers omitting the field.
+  - `DB:MigrateShop` defaults `trackProductionCost` to false.
+- **Tutorial.** Added Restock Cost and Stock & Treasury economics steps to the main `STEPS` walkthrough; the latter sets `SK.Manager._peopleSubTab = "inventory"` in `setup` before switching tabs.
 
-**Bugs Fixed**
-- Tooltip version badge not showing on other players — the HELLO whisper reply now uses the full Name-Realm address. Previously the realm suffix was stripped, causing silent delivery failure on connected realms.
-- Tooltip version badge (TRP3) — the badge now resolves the hovered player from TRP3's own internal tooltip target instead of the mouseover unit token, which could point to a different player or return nil if the cursor had moved.
-- Account-wide shop access — characters on the same account no longer inherit the active shop of a different character at login.
-- Remove employee button unclickable — the button was calling an undefined function, causing a silent Lua error before the removal could run. Fixed.
-- Manager window spawning off-centre — the window was offset 300px to the right of screen centre on open.
-- Seller IC name bleeding across characters — new characters were being seeded with the IC name of whichever character last saved the setting.
-- Shop Overview and Staff tabs misaligned — content in these two tabs sat flush against the left edge of the window instead of matching the consistent padding used by all other tabs.
-- TOC: numeric CurseForge project ID — X-Curse-Project-ID was set to a text slug instead of the required numeric ID.
-- TOC: file path separators — module paths now use forward slashes as required.
-
-### v1.3.3
-**Added**
-- TRP3 Profile Text: a new button on the Products tab generates ready-to-paste TRP3 markup for your character's About tab, no separate addon required. A settings panel lets you customise shop title size, category title size, product name size, alignment, category colours, and whether out-of-stock products are included.
-
-**Changed**
-- Network: A full sync request (/sk sync) now also pushes category colours and category order alongside products and orders.
-- Code cleanup: Removed an internal BroadcastToStaff function that was defined but never called. Removed the dead LOGS_DATA send path that had no corresponding receiver.
-
-The previous version mentioned another addon in the makings. A separate one that shows a catalogue. But due to no interest this project has been put on hold. Therefore the TRP3 feature is released.
-
-### v1.3.2
-**Bug Fixes**
-- Network: Empty log syncs now correctly use the LOGS_START / LOGS_END protocol instead of the unhandled LOGS_DATA command, which was silently dropped by receivers.
-- Network: Category colours and category order were not being pushed to staff members whose products were already up to date when they came online. They now always receive colours on login sync.
-
-**Added**
-- What's New auto-open: The register now opens automatically to the What's New tab the first time you log in after installing a new version, so you never miss what changed.
-- Community links: The What's New tab now has three quick-access buttons — Discord, CurseForge, and GitHub. Click any of them to copy the URL to your clipboard.
-
-**Changed**
-- Network: A full sync request (/sk sync) now also pushes category colours and category order alongside products and orders.
-- Code cleanup: Removed an internal BroadcastToStaff function that was defined but never called. Removed the dead LOGS_DATA send path that had no corresponding receiver.
-
-### v1.3.1
-**Bugs Fixed**
-- Management tab: Move Up and Move Down buttons were too narrow, causing text to overflow outside the button borders.
-- Products tab: Category and Price column headers were misaligned with the data rows beneath them.
-- Shop(s) Overview: the Delete Shop and Leave This Shop buttons were clipped by the bottom border of the panel.
-
-**Added**
-- Icon picker: updated from 20,073 icons (BfA 8.0 era) to 32,874 icons, covering all content through The War Within and Midnight.
-- Icon picker: runtime supplement — spellbook, mount journal, and pet journal are scanned at login to surface any icons not yet in the static list.
-- Shop(s) Overview: manual Request Sync button added alongside Delete/Leave.
-
-**Changed**
-- Icon picker: now always opens Storekeeper's own built-in picker. Previously it would open TRP3's icon browser when TRP3 was loaded, causing confusion.
-- What's New: moved from a delayed sidebar tab to a permanent button in the title bar, left of the close button. No more delay on first open.
-- Sync button removed from the title bar — sync runs automatically on login.
-- Removed dead TRP3 icon browser integration code that was no longer reachable.
-
-### v1.3.0
-- Granular staff permissions (edit products, apply discounts, adjust stock, add employees).
-- Staff discounts per staff member.
-- Category colours synced to all staff.
-- Treasury auto-updates on Paid in Full sales and completed orders.
-- Withdraw All button.
-- ETA expiry — overdue claimed orders auto-release to unclaimed.
-- Activity Log category filter tabs.
-- Update notifications when a colleague is on a newer version.
-- Stock overview with +/− adjustment buttons in Shop(s) Overview.
+### Fixed
+- **Product list scroll reset on save.** `SaveProduct` now captures `M.fProductSF:GetVerticalScroll()` before the rebuild and restores it via `C_Timer.After(0, ...)`, clamped to the new `GetVerticalScrollRange`, so editing an item no longer snaps the list to the top.
+- **Stock tab scroll reset on +/-.** The Stock +/- handlers no longer call `M:SwitchTab("people")` (a full tab rebuild). They now update the row's stock cell in place via a local `RefreshStockCell` closure (GetProducts returns live references; `SetStock` mutates them), preserving scroll position and eliminating flicker. The treasury FontString is updated in place when a restock charge applies.
 
 ---
 
